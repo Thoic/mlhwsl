@@ -51,23 +51,6 @@ def Perceptron(X_train: pd.DataFrame, y_train, X_test: pd.DataFrame, y_test):
     confuse_matrix = pd.crosstab(y_test, y_predict, rownames=['Actual'], colnames=['Predicted'])
     print(confuse_matrix)
     
-
-def LinReg(X_train, y_train, X_test, y_test):
-    # linear regression
-    reg = LinearRegression().fit(X_train, y_train)
-
-    predict = reg.predict(X_test)
-    print(predict)
-
-    confuse_matrix = pd.crosstab(y_test, predict, rownames=['Actual'], colnames=['Predicted'])
-
-def LogReg(X_train, y_train, X_test, y_test):
-    reg = LogisticRegression().fit(X_train, y_train)
-
-    predict = reg.predict(X_test)
-
-    confuse_matrix = pd.crosstab(y_test, predict, rownames=['Actual'], colnames=['Predicted'])
-    print(confuse_matrix)
     
 
 def main():

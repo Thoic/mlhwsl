@@ -21,9 +21,6 @@ def perceptronUpdate(w, t, o, x):
         w[i] += ETA * (t - o) * x[i-1]
 
 def Perceptron(X_train: pd.DataFrame, y_train: pd.DataFrame, X_test: pd.DataFrame, y_test: pd.DataFrame):
-    # modify train/test set for binary classification
-    y_train[:] = [1 if item >= 6 else -1 for item in y_train]
-    y_test[:] = [1 if item >= 6 else -1 for item in y_test]
 
     w = np.zeros(len(X_train.to_numpy()[0]) + 1)
 
@@ -82,9 +79,13 @@ def main():
 
     X_test, y_test = df.iloc[testb_idx:, :-1], df.iloc[testb_idx:, -1]
 
+    # modify train/test set for binary classification
+    y_train[:] = [1 if item >= 6 else -1 for item in y_train]
+    y_test[:] = [1 if item >= 6 else -1 for item in y_test]
+
     # LinReg(X_train, y_train, X_test, y_test)
-    # LogReg(X_train, y_train, X_test, y_test)
-    Perceptron(X_train, y_train, X_test, y_test)
+    LogReg(X_train, y_train, X_test, y_test)
+    # Perceptron(X_train, y_train, X_test, y_test)
 
 if __name__ == "__main__":
     main()

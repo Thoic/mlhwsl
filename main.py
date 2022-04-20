@@ -3,7 +3,7 @@ import numpy as np
 import pandas as pd
 from sklearn.linear_model import LinearRegression, LogisticRegression
 
-input_file = 'data/winequality-red.csv'
+input_file = 'data/winequality-white.csv'
 
 # perceptron learning rate
 ETA = 0.1
@@ -13,7 +13,6 @@ def output(w: np.ndarray, x: np.ndarray):
         return 1
     else:
         return -1
-
 
 def perceptronUpdate(w, t, o, x):
     for i in range(len(w)):
@@ -36,12 +35,9 @@ def Perceptron(X_train: pd.DataFrame, y_train: pd.DataFrame, X_test: pd.DataFram
 
         print(f'after the {j} iteration')
         print(f'w: {w}')
-        isSolved = True
-        for weight, prev_weight in zip(w, w_prev):
-            if not math.isclose(weight, prev_weight, abs_tol=0.001):
-                isSolved = False
-                break
-        if isSolved:
+
+        # if weights did not update
+        if (w == w_prev).all():
             break
         else:
             w_prev = w.copy()

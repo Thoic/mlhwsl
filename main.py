@@ -3,6 +3,7 @@ import pandas as pd
 from sklearn.linear_model import LogisticRegression
 from sklearn.neural_network import MLPClassifier
 from sklearn.naive_bayes import GaussianNB
+from sklearn.metrics import roc_auc_score
 
 INPUT_FILE = "data/winequality-white.csv"
 
@@ -37,9 +38,6 @@ def Perceptron(X_train, y_train, X_test, y_test):
             o = output(w, x)
             perceptronUpdate(w, t, o, x)
 
-        print(f"after the {j} iteration")
-        print(f"w: {w}")
-
         # if weights did not update
         if (w == w_prev).all():
             break
@@ -55,6 +53,8 @@ def Perceptron(X_train, y_train, X_test, y_test):
     )
     print(confuse_matrix)
 
+    return y_predict
+
 
 def LogReg(X_train, y_train, X_test, y_test):
     reg = LogisticRegression(max_iter=MAX_ITER)
@@ -66,6 +66,7 @@ def LogReg(X_train, y_train, X_test, y_test):
         y_test, predict, rownames=["Actual"], colnames=["Predicted"]
     )
     print(confuse_matrix)
+    return predict
 
 
 def MLPClass(X_train, y_train, X_test, y_test):
@@ -78,6 +79,7 @@ def MLPClass(X_train, y_train, X_test, y_test):
         y_test, predict, rownames=["Actual"], colnames=["Predicted"]
     )
     print(confuse_matrix)
+    return predict
 
 
 def NaiveBayes(X_train, y_train, X_test, y_test):
@@ -90,12 +92,15 @@ def NaiveBayes(X_train, y_train, X_test, y_test):
         y_test, predict, rownames=["Actual"], colnames=["Predicted"]
     )
     print(confuse_matrix)
+    return predict
 
 def naive_classifier(X_train, y_train, X_test, y_test):
     naive_predict = np.full(len(y_test), 1)
 
     confuse_matrix = pd.crosstab(y_test, naive_predict, rownames=['Actual'], colnames=['Predicted'])
     print(confuse_matrix)
+
+    return naive_predict
     
 
 def main():
@@ -116,14 +121,29 @@ def main():
 
     # LinReg(X_train, y_train, X_test, y_test)
     print("Logistical Regression:")
-    LogReg(X_train, y_train, X_test, y_test)
-    # Perceptron(X_train, y_train, X_test, y_test)
+    log_predict = LogReg(X_train, y_train, X_test, y_test)
+
+    print('Perceptron: ')
+    percept_predict = Perceptron(X_train, y_train, X_test, y_test)
 
     print("MLPClassifier: ")
-    MLPClass(X_train, y_train, X_test, y_test)
+    network_predict = MLPClass(X_train, y_train, X_test, y_test)
 
     print("Naive Bayes:")
-    NaiveBayes(X_train, y_train, X_test, y_test)
+    bayes_predict = NaiveBayes(X_train, y_train, X_test, y_test)
+
+    print("Naive Classifier: ")
+    naive_predict = naive_classifier(X_train, y_train, X_test, y_test)
+
+    percept_auc = roc_auc_score(y_test, percept_predict)
+    log_auc = roc_auc_score(y_test, log_predict)
+    network_auc = roc_auc_score(y_test, network_predict)
+    bayes_auc = roc_auc_score(y_test, bayes_predict)
+    naive_auc = roc_auc_score(y_test, naive_predict)
+
+
+    print(f'percept_auc:{percept_auc}, log_auc:{log_auc}, network_auc:{network_auc}, bayes_auc:{bayes_auc}, naive_auc:{naive_auc}')
+
 
 
 if __name__ == "__main__":

@@ -1,23 +1,28 @@
 import numpy as np
 import pandas as pd
 from sklearn.linear_model import LogisticRegression
+from sklearn.neural_network import MLPClassifier
+from sklearn.naive_bayes import GaussianNB
 
-INPUT_FILE = 'data/winequality-white.csv'
+INPUT_FILE = "data/winequality-white.csv"
 
 # perceptron learning rate
 ETA = 0.1
 MAX_ITER = 1000
 
+
 def output(w: np.ndarray, x: np.ndarray):
     o = np.dot(w, x)
     if (o) > 0:
-        return 1.
+        return 1.0
     else:
-        return -1.
+        return -1.0
+
 
 def perceptronUpdate(w, t, o, x):
     for i in range(len(w)):
         w[i] += ETA * (t - o) * x[i]
+
 
 def Perceptron(X_train, y_train, X_test, y_test):
 
@@ -32,22 +37,24 @@ def Perceptron(X_train, y_train, X_test, y_test):
             o = output(w, x)
             perceptronUpdate(w, t, o, x)
 
-        print(f'after the {j} iteration')
-        print(f'w: {w}')
+        print(f"after the {j} iteration")
+        print(f"w: {w}")
 
         # if weights did not update
         if (w == w_prev).all():
             break
         else:
             w_prev = w.copy()
-    
+
     y_predict = np.empty_like(y_test)
     for idx, item in enumerate(X_test):
         y_predict[idx] = output(w, item)
-    
-    confuse_matrix = pd.crosstab(y_test, y_predict, rownames=['Actual'], colnames=['Predicted'])
+
+    confuse_matrix = pd.crosstab(
+        y_test, y_predict, rownames=["Actual"], colnames=["Predicted"]
+    )
     print(confuse_matrix)
-    
+
 
 def LogReg(X_train, y_train, X_test, y_test):
     reg = LogisticRegression(max_iter=MAX_ITER)
@@ -55,7 +62,33 @@ def LogReg(X_train, y_train, X_test, y_test):
 
     predict = reg.predict(X_test)
 
-    confuse_matrix = pd.crosstab(y_test, predict, rownames=['Actual'], colnames=['Predicted'])
+    confuse_matrix = pd.crosstab(
+        y_test, predict, rownames=["Actual"], colnames=["Predicted"]
+    )
+    print(confuse_matrix)
+
+
+def MLPClass(X_train, y_train, X_test, y_test):
+    reg = MLPClassifier(hidden_layer_sizes=(10, 10), random_state=0)
+    reg.fit(X_train, y_train)
+
+    predict = reg.predict(X_test)
+
+    confuse_matrix = pd.crosstab(
+        y_test, predict, rownames=["Actual"], colnames=["Predicted"]
+    )
+    print(confuse_matrix)
+
+
+def NaiveBayes(X_train, y_train, X_test, y_test):
+    reg = GaussianNB()
+    reg.fit(X_train, y_train)
+
+    predict = reg.predict(X_test)
+
+    confuse_matrix = pd.crosstab(
+        y_test, predict, rownames=["Actual"], colnames=["Predicted"]
+    )
     print(confuse_matrix)
 
 def naive_classifier(X_train, y_train, X_test, y_test):
@@ -66,11 +99,11 @@ def naive_classifier(X_train, y_train, X_test, y_test):
     
 
 def main():
-    df = pd.read_csv(INPUT_FILE, header=0, sep=';')
+    df = pd.read_csv(INPUT_FILE, header=0, sep=";")
 
     # pre-processing
     # valb_idx = int(len(df.index)*0.6)
-    testb_idx = int(len(df.index)*0.8)
+    testb_idx = int(len(df.index) * 0.8)
 
     X_train, y_train = df.values[:testb_idx, :-1], df.values[:testb_idx, -1]
     # X_val, y_val = df.values[valb_idx:testb_idx, :-1], df.values[valb_idx:testb_idx, -1]
@@ -81,9 +114,17 @@ def main():
     # y_val[:] = [1 if item >= 6 else -1 for item in y_val]
     y_test[:] = [1 if item >= 6 else -1 for item in y_test]
 
-    # LogReg(X_train, y_train, X_test, y_test)
-    Perceptron(X_train, y_train, X_test, y_test)
-    # naive_classifier(X_train, y_train, X_test, y_test)
+    # LinReg(X_train, y_train, X_test, y_test)
+    print("Logistical Regression:")
+    LogReg(X_train, y_train, X_test, y_test)
+    # Perceptron(X_train, y_train, X_test, y_test)
+
+    print("MLPClassifier: ")
+    MLPClass(X_train, y_train, X_test, y_test)
+
+    print("Naive Bayes:")
+    NaiveBayes(X_train, y_train, X_test, y_test)
+
 
 if __name__ == "__main__":
     main()

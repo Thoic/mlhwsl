@@ -57,6 +57,12 @@ def LogReg(X_train, y_train, X_test, y_test):
 
     confuse_matrix = pd.crosstab(y_test, predict, rownames=['Actual'], colnames=['Predicted'])
     print(confuse_matrix)
+
+def naive_classifier(X_train, y_train, X_test, y_test):
+    naive_predict = np.full(len(y_test), 1)
+
+    confuse_matrix = pd.crosstab(y_test, naive_predict, rownames=['Actual'], colnames=['Predicted'])
+    print(confuse_matrix)
     
 
 def main():
@@ -75,9 +81,9 @@ def main():
     # y_val[:] = [1 if item >= 6 else -1 for item in y_val]
     y_test[:] = [1 if item >= 6 else -1 for item in y_test]
 
-    # LinReg(X_train, y_train, X_test, y_test)
-    LogReg(X_train, y_train, X_test, y_test)
-    # Perceptron(X_train, y_train, X_test, y_test)
+    # LogReg(X_train, y_train, X_test, y_test)
+    Perceptron(X_train, y_train, X_test, y_test)
+    # naive_classifier(X_train, y_train, X_test, y_test)
 
 if __name__ == "__main__":
     main()

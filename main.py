@@ -63,23 +63,21 @@ def main():
     df = pd.read_csv(INPUT_FILE, header=0, sep=';')
 
     # pre-processing
-    train_num = int(len(df.index)*0.8)
-    test_num = int(len(df.index)) - train_num
+    # valb_idx = int(len(df.index)*0.6)
+    testb_idx = int(len(df.index)*0.8)
 
-    train_df = df.sample(train_num, random_state=1)
-    test_df = df.sample(test_num, random_state=1)
-
-    X_train, y_train = train_df.values[:, :-1], train_df.values[:, -1]
-
-    X_test, y_test = test_df.values[:, :-1], test_df.values[:, -1]
+    X_train, y_train = df.values[:testb_idx, :-1], df.values[:testb_idx, -1]
+    # X_val, y_val = df.values[valb_idx:testb_idx, :-1], df.values[valb_idx:testb_idx, -1]
+    X_test, y_test = df.values[testb_idx:, :-1], df.values[testb_idx:, -1]
 
     # modify train/test set for binary classification
     y_train[:] = [1 if item >= 6 else -1 for item in y_train]
+    # y_val[:] = [1 if item >= 6 else -1 for item in y_val]
     y_test[:] = [1 if item >= 6 else -1 for item in y_test]
 
     # LinReg(X_train, y_train, X_test, y_test)
     LogReg(X_train, y_train, X_test, y_test)
-    #Perceptron(X_train, y_train, X_test, y_test)
+    # Perceptron(X_train, y_train, X_test, y_test)
 
 if __name__ == "__main__":
     main()

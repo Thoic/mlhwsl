@@ -3,7 +3,8 @@ import pandas as pd
 from sklearn.linear_model import LogisticRegression
 from sklearn.neural_network import MLPClassifier
 from sklearn.naive_bayes import GaussianNB
-from sklearn.metrics import roc_auc_score
+from sklearn.metrics import ConfusionMatrixDisplay, RocCurveDisplay, roc_auc_score
+from matplotlib import pyplot as plt
 
 INPUT_FILE = "data/winequality-white.csv"
 
@@ -52,7 +53,9 @@ def Perceptron(X_train, y_train, X_test, y_test):
         y_test, y_predict, rownames=["Actual"], colnames=["Predicted"]
     )
     print(confuse_matrix)
-
+    ConfusionMatrixDisplay.from_predictions(y_test, y_predict)
+    plt.title("Perceptron")
+    # plt.show()
     return y_predict
 
 
@@ -66,6 +69,9 @@ def LogReg(X_train, y_train, X_test, y_test):
         y_test, predict, rownames=["Actual"], colnames=["Predicted"]
     )
     print(confuse_matrix)
+    ConfusionMatrixDisplay.from_predictions(y_test, predict)
+    plt.title("Logistic Regression")
+    # plt.show()
     return predict
 
 
@@ -79,6 +85,9 @@ def MLPClass(X_train, y_train, X_test, y_test):
         y_test, predict, rownames=["Actual"], colnames=["Predicted"]
     )
     print(confuse_matrix)
+    ConfusionMatrixDisplay.from_predictions(y_test, predict)
+    plt.title("Multilayer Perceptron")
+    # plt.show()
     return predict
 
 
@@ -92,16 +101,24 @@ def NaiveBayes(X_train, y_train, X_test, y_test):
         y_test, predict, rownames=["Actual"], colnames=["Predicted"]
     )
     print(confuse_matrix)
+    ConfusionMatrixDisplay.from_predictions(y_test, predict)
+    plt.title("Naive Bayes")
+    # plt.show()
     return predict
+
 
 def naive_classifier(X_train, y_train, X_test, y_test):
     naive_predict = np.full(len(y_test), 1)
 
-    confuse_matrix = pd.crosstab(y_test, naive_predict, rownames=['Actual'], colnames=['Predicted'])
+    confuse_matrix = pd.crosstab(
+        y_test, naive_predict, rownames=["Actual"], colnames=["Predicted"]
+    )
     print(confuse_matrix)
-
+    ConfusionMatrixDisplay.from_predictions(y_test, naive_predict)
+    plt.title("Naive Classifier")
+    # plt.show()
     return naive_predict
-    
+
 
 def main():
     df = pd.read_csv(INPUT_FILE, header=0, sep=";")
@@ -123,7 +140,7 @@ def main():
     print("Logistical Regression:")
     log_predict = LogReg(X_train, y_train, X_test, y_test)
 
-    print('Perceptron: ')
+    print("Perceptron: ")
     percept_predict = Perceptron(X_train, y_train, X_test, y_test)
 
     print("MLPClassifier: ")
@@ -136,14 +153,30 @@ def main():
     naive_predict = naive_classifier(X_train, y_train, X_test, y_test)
 
     percept_auc = roc_auc_score(y_test, percept_predict)
+    RocCurveDisplay.from_predictions(y_test, percept_predict)
+    plt.title("Perceptron ROC")
+
     log_auc = roc_auc_score(y_test, log_predict)
+    RocCurveDisplay.from_predictions(y_test, log_predict)
+    plt.title("Logistic Regression ROC")
+
     network_auc = roc_auc_score(y_test, network_predict)
+    RocCurveDisplay.from_predictions(y_test, network_predict)
+    plt.title("Multilayer Perceptron ROC")
+
     bayes_auc = roc_auc_score(y_test, bayes_predict)
+    RocCurveDisplay.from_predictions(y_test, bayes_predict)
+    plt.title("Naive Bayes ROC")
+
     naive_auc = roc_auc_score(y_test, naive_predict)
+    RocCurveDisplay.from_predictions(y_test, naive_predict)
+    plt.title("Naive Classifier ROC")
 
+    print(
+        f"percept_auc:{percept_auc}, log_auc:{log_auc}, network_auc:{network_auc}, bayes_auc:{bayes_auc}, naive_auc:{naive_auc}"
+    )
 
-    print(f'percept_auc:{percept_auc}, log_auc:{log_auc}, network_auc:{network_auc}, bayes_auc:{bayes_auc}, naive_auc:{naive_auc}')
-
+    plt.show()
 
 
 if __name__ == "__main__":

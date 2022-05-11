@@ -1,90 +1,14 @@
 import numpy as np
 import pandas as pd
-from sklearn.linear_model import LogisticRegression
-from sklearn.neural_network import MLPClassifier
-from sklearn.naive_bayes import GaussianNB
-from sklearn.metrics import roc_auc_score
+from logistic import LogisticRegression
+from percept import Perceptron
+from sklearn.metrics import ConfusionMatrixDisplay, RocCurveDisplay, roc_auc_score
 
 INPUT_FILE = "data/winequality-white.csv"
 
 # perceptron learning rate
 ETA = 0.1
 MAX_ITER = 1000
-
-# create a confusion matrix and determine tpr, fpr
-def confuse_matrix(y_predict, y_test):
-    conf_mat = [[0,0],
-                [0,0]]
-    for h, c in zip(y_predict, y_test):
-        if h == -1. and c == -1.:
-            conf_mat[0][0] += 1
-        elif h == 1. and c == -1.:
-            conf_mat[0][1] += 1
-        elif h == -1. and c == 1.:
-            conf_mat[1][0] += 1
-        elif h == 1. and c == 1.:
-            conf_mat[1][1] += 1
-    
-    tpr = conf_mat[1][1]/(conf_mat[1][1]+conf_mat[1][0])
-    fpr = conf_mat[0][1]/(conf_mat[0][0]+conf_mat[0][1])
-
-    return conf_mat, tpr, fpr
-
-def output(w: np.ndarray, x: np.ndarray):
-    o = np.dot(w, x)
-    if (o) > 0:
-        return 1.0
-    else:
-        return -1.0
-
-
-def perceptronUpdate(w, t, o, x):
-    for i in range(len(w)):
-        w[i] += ETA * (t - o) * x[i]
-
-
-def Perceptron(X_train, y_train, X_test, y_test):
-
-    X_train = np.insert(X_train, 0, 1, axis=1)
-    X_test = np.insert(X_test, 0, 1, axis=1)
-
-    w = np.full(len(X_train[0]), 0.1)
-
-    w_prev = w.copy()
-    for j in range(0, MAX_ITER):
-        for x, t in zip(X_train, y_train):
-            o = output(w, x)
-            perceptronUpdate(w, t, o, x)
-
-        # if weights did not update
-        if (w == w_prev).all():
-            break
-        else:
-            w_prev = w.copy()
-
-    y_predict = np.empty_like(y_test)
-    for idx, item in enumerate(X_test):
-        y_predict[idx] = output(w, item)
-
-    mat, tpr, fpr = confuse_matrix(y_predict, y_test)
-    print(mat)
-    print(f'tpr: {tpr}, fpr:{fpr}')
-
-    return y_predict
-
-
-def LogReg(X_train, y_train, X_test, y_test):
-    reg = LogisticRegression(max_iter=MAX_ITER)
-    reg.fit(X_train, y_train)
-
-    y_predict = reg.predict(X_test)
-
-    mat, tpr, fpr = confuse_matrix(y_predict, y_test)
-    print(pd.crosstab(y_test, y_predict, rownames=['Actual'], colnames=['Predicted']))
-    print(f'tpr: {tpr}, fpr:{fpr}')
-
-    return y_predict
-
 
 
 def MLPClass(X_train, y_train, X_test, y_test):
@@ -98,7 +22,6 @@ def MLPClass(X_train, y_train, X_test, y_test):
     print(f'tpr: {tpr}, fpr:{fpr}')
 
     return y_predict
-
 
 
 def NaiveBayes(X_train, y_train, X_test, y_test):
@@ -142,29 +65,45 @@ def main():
     y_test[:] = [1 if item >= 6 else -1 for item in y_test]
 
     print("Logistical Regression:")
-    log_predict = LogReg(X_train, y_train, X_test, y_test)
+    log_predict = LogisticRegression(X_train, y_train, X_test, y_test, MAX_ITER, ETA)
 
-    print('Perceptron: ')
-    percept_predict = Perceptron(X_train, y_train, X_test, y_test)
+    # print("Perceptron: ")
+    # percept_predict = Perceptron(X_train, y_train, X_test, y_test)
 
-    print("MLPClassifier: ")
-    network_predict = MLPClass(X_train, y_train, X_test, y_test)
+    # print("MLPClassifier: ")
+    # network_predict = MLPClass(X_train, y_train, X_test, y_test)
 
-    print("Naive Bayes:")
-    bayes_predict = NaiveBayes(X_train, y_train, X_test, y_test)
+    # print("Naive Bayes:")
+    # bayes_predict = NaiveBayes(X_train, y_train, X_test, y_test)
 
-    print("Naive Classifier: ")
-    naive_predict = naive_classifier(X_train, y_train, X_test, y_test)
+    # print("Naive Classifier: ")
+    # naive_predict = naive_classifier(X_train, y_train, X_test, y_test)
 
-    percept_auc = roc_auc_score(y_test, percept_predict)
-    log_auc = roc_auc_score(y_test, log_predict)
-    network_auc = roc_auc_score(y_test, network_predict)
-    bayes_auc = roc_auc_score(y_test, bayes_predict)
-    naive_auc = roc_auc_score(y_test, naive_predict)
+    # percept_auc = roc_auc_score(y_test, percept_predict)
+    # RocCurveDisplay.from_predictions(y_test, percept_predict)
+    # plt.title("Perceptron ROC")
 
+    # log_auc = roc_auc_score(y_test, log_predict)
+    # RocCurveDisplay.from_predictions(y_test, log_predict)
+    # plt.title("Logistic Regression ROC")
 
-    print(f'percept_auc:{percept_auc}, log_auc:{log_auc}, network_auc:{network_auc}, bayes_auc:{bayes_auc}, naive_auc:{naive_auc}')
+    # network_auc = roc_auc_score(y_test, network_predict)
+    # RocCurveDisplay.from_predictions(y_test, network_predict)
+    # plt.title("Multilayer Perceptron ROC")
 
+    # bayes_auc = roc_auc_score(y_test, bayes_predict)
+    # RocCurveDisplay.from_predictions(y_test, bayes_predict)
+    # plt.title("Naive Bayes ROC")
+
+    # naive_auc = roc_auc_score(y_test, naive_predict)
+    # RocCurveDisplay.from_predictions(y_test, naive_predict)
+    # plt.title("Naive Classifier ROC")
+
+    # print(
+    #     f"percept_auc:{percept_auc}, log_auc:{log_auc}, network_auc:{network_auc}, bayes_auc:{bayes_auc}, naive_auc:{naive_auc}"
+    # )
+
+    # plt.show()
 
 
 if __name__ == "__main__":

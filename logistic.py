@@ -1,13 +1,16 @@
 import numpy as np
 import pandas as pd
 from matplotlib import pyplot as plt
+from util import confuse_matrix
 from sklearn.metrics import ConfusionMatrixDisplay, RocCurveDisplay, roc_auc_score
 
 INPUT_FILE = "data/winequality-white.csv"
 
 # log learning rate
 ETA = 0.1
-MAX_ITER = 200
+MAX_ITER = 1000
+
+THRESHOLD = 0.5
 
 def sigmoid(s):
     return 1/(1 + np.exp(-s))
@@ -22,7 +25,7 @@ def log_fit(X_train, y_train):
         sum = 0
         for x, y in zip(X_train, y_train):
             numerator = np.dot(y, x)
-            sum += numerator / (1 + np.exp(y*w.T*x))
+            sum += numerator / (1 + np.exp(y * w.T @ x))
         gradient = (-1/m)*sum
 
         w = w - ETA*gradient
@@ -38,7 +41,7 @@ def log_fit(X_train, y_train):
 
 def log_predict(x, w):
     s = np.dot(w, x)
-    if (sigmoid(s)) > 0:
+    if (sigmoid(s)) > THRESHOLD:
         return 1.0
     else:
         return -1.0
@@ -65,6 +68,10 @@ def LogisticRegression():
     y_predict = np.empty_like(y_test)
     for idx, item in enumerate(X_test):
         y_predict[idx] = log_predict(weights, item)    
+    
+    mat, tpr, fpr = confuse_matrix(y_predict, y_test)
+    print(pd.crosstab(y_test, y_predict, rownames=['Actual'], colnames=['Predicted']))
+    print(f'tpr: {tpr}, fpr:{fpr}')
 
     ConfusionMatrixDisplay.from_predictions(y_test, y_predict)
     plt.title("Logistic Regression")
@@ -74,7 +81,7 @@ def LogisticRegression():
     RocCurveDisplay.from_predictions(y_test, y_predict)
     plt.title("Logistic Regression Classifier ROC")
 
-    plt.show()
+    plt.savefig('log.png')
 
 if __name__ == "__main__":
     LogisticRegression()

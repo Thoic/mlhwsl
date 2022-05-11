@@ -71,15 +71,15 @@ def Perceptron():
         y_predict[idx] = output(weights, item)
 
     ConfusionMatrixDisplay.from_predictions(y_test, y_predict)
-    plt.title("Logistic Regression")
+    plt.title("Perceptron")
 
     log_auc = roc_auc_score(y_test, y_predict)
     print(log_auc)
 
     RocCurveDisplay.from_predictions(y_test, y_predict)
-    plt.title("Logistic Regression Classifier ROC")
+    plt.title("Perceptron Classifier ROC")
 
-    plt.show()
+    plt.savefig('percept.png')
 
 if __name__ == "__main__":
     Perceptron()

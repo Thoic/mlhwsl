@@ -3,38 +3,13 @@ import pandas as pd
 from logistic import LogisticRegression
 from percept import Perceptron
 from sklearn.metrics import ConfusionMatrixDisplay, RocCurveDisplay, roc_auc_score
+from util import confuse_matrix
 
 INPUT_FILE = "data/winequality-white.csv"
 
 # perceptron learning rate
 ETA = 0.1
 MAX_ITER = 1000
-
-
-def MLPClass(X_train, y_train, X_test, y_test):
-    reg = MLPClassifier(hidden_layer_sizes=(10, 10), random_state=0)
-    reg.fit(X_train, y_train)
-
-    y_predict = reg.predict(X_test)
-    
-    mat, tpr, fpr = confuse_matrix(y_predict, y_test)
-    print(pd.crosstab(y_test, y_predict, rownames=['Actual'], colnames=['Predicted']))
-    print(f'tpr: {tpr}, fpr:{fpr}')
-
-    return y_predict
-
-
-def NaiveBayes(X_train, y_train, X_test, y_test):
-    reg = GaussianNB()
-    reg.fit(X_train, y_train)
-
-    y_predict = reg.predict(X_test)
-
-    mat, tpr, fpr = confuse_matrix(y_predict, y_test)
-    print(pd.crosstab(y_test, y_predict, rownames=['Actual'], colnames=['Predicted']))
-    print(f'tpr: {tpr}, fpr:{fpr}')
-
-    return y_predict
 
 # classifier that predicts all entries to be 1
 def naive_classifier(X_train, y_train, X_test, y_test):
@@ -67,14 +42,11 @@ def main():
     print("Logistical Regression:")
     log_predict = LogisticRegression(X_train, y_train, X_test, y_test, MAX_ITER, ETA)
 
-    # print("Perceptron: ")
-    # percept_predict = Perceptron(X_train, y_train, X_test, y_test)
+    print("Perceptron: ")
+    percept_predict = Perceptron(X_train, y_train, X_test, y_test)
 
-    # print("MLPClassifier: ")
-    # network_predict = MLPClass(X_train, y_train, X_test, y_test)
-
-    # print("Naive Bayes:")
-    # bayes_predict = NaiveBayes(X_train, y_train, X_test, y_test)
+    print("Naive Bayes:")
+    bayes_predict = NaiveBayes(X_train, y_train, X_test, y_test)
 
     # print("Naive Classifier: ")
     # naive_predict = naive_classifier(X_train, y_train, X_test, y_test)

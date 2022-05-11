@@ -11,6 +11,24 @@ INPUT_FILE = "data/winequality-white.csv"
 ETA = 0.1
 MAX_ITER = 1000
 
+# create a confusion matrix and determine tpr, fpr
+def confuse_matrix(y_predict, y_test):
+    conf_mat = [[0,0],
+                [0,0]]
+    for h, c in zip(y_predict, y_test):
+        if h == -1. and c == -1.:
+            conf_mat[0][0] += 1
+        elif h == 1. and c == -1.:
+            conf_mat[0][1] += 1
+        elif h == -1. and c == 1.:
+            conf_mat[1][0] += 1
+        elif h == 1. and c == 1.:
+            conf_mat[1][1] += 1
+    
+    tpr = conf_mat[1][1]/(conf_mat[1][1]+conf_mat[1][0])
+    fpr = conf_mat[0][1]/(conf_mat[0][0]+conf_mat[0][1])
+
+    return conf_mat, tpr, fpr
 
 def output(w: np.ndarray, x: np.ndarray):
     o = np.dot(w, x)
@@ -48,10 +66,9 @@ def Perceptron(X_train, y_train, X_test, y_test):
     for idx, item in enumerate(X_test):
         y_predict[idx] = output(w, item)
 
-    confuse_matrix = pd.crosstab(
-        y_test, y_predict, rownames=["Actual"], colnames=["Predicted"]
-    )
-    print(confuse_matrix)
+    mat, tpr, fpr = confuse_matrix(y_predict, y_test)
+    print(mat)
+    print(f'tpr: {tpr}, fpr:{fpr}')
 
     return y_predict
 
@@ -60,47 +77,52 @@ def LogReg(X_train, y_train, X_test, y_test):
     reg = LogisticRegression(max_iter=MAX_ITER)
     reg.fit(X_train, y_train)
 
-    predict = reg.predict(X_test)
+    y_predict = reg.predict(X_test)
 
-    confuse_matrix = pd.crosstab(
-        y_test, predict, rownames=["Actual"], colnames=["Predicted"]
-    )
-    print(confuse_matrix)
-    return predict
+    mat, tpr, fpr = confuse_matrix(y_predict, y_test)
+    print(pd.crosstab(y_test, y_predict, rownames=['Actual'], colnames=['Predicted']))
+    print(f'tpr: {tpr}, fpr:{fpr}')
+
+    return y_predict
+
 
 
 def MLPClass(X_train, y_train, X_test, y_test):
     reg = MLPClassifier(hidden_layer_sizes=(10, 10), random_state=0)
     reg.fit(X_train, y_train)
 
-    predict = reg.predict(X_test)
+    y_predict = reg.predict(X_test)
+    
+    mat, tpr, fpr = confuse_matrix(y_predict, y_test)
+    print(pd.crosstab(y_test, y_predict, rownames=['Actual'], colnames=['Predicted']))
+    print(f'tpr: {tpr}, fpr:{fpr}')
 
-    confuse_matrix = pd.crosstab(
-        y_test, predict, rownames=["Actual"], colnames=["Predicted"]
-    )
-    print(confuse_matrix)
-    return predict
+    return y_predict
+
 
 
 def NaiveBayes(X_train, y_train, X_test, y_test):
     reg = GaussianNB()
     reg.fit(X_train, y_train)
 
-    predict = reg.predict(X_test)
+    y_predict = reg.predict(X_test)
 
-    confuse_matrix = pd.crosstab(
-        y_test, predict, rownames=["Actual"], colnames=["Predicted"]
-    )
-    print(confuse_matrix)
-    return predict
+    mat, tpr, fpr = confuse_matrix(y_predict, y_test)
+    print(pd.crosstab(y_test, y_predict, rownames=['Actual'], colnames=['Predicted']))
+    print(f'tpr: {tpr}, fpr:{fpr}')
 
+    return y_predict
+
+# classifier that predicts all entries to be 1
 def naive_classifier(X_train, y_train, X_test, y_test):
-    naive_predict = np.full(len(y_test), 1)
+    y_predict = np.full(len(y_test), 1)
 
-    confuse_matrix = pd.crosstab(y_test, naive_predict, rownames=['Actual'], colnames=['Predicted'])
-    print(confuse_matrix)
+    mat, tpr, fpr = confuse_matrix(y_predict, y_test)
+    print(pd.crosstab(y_test, y_predict, rownames=['Actual'], colnames=['Predicted']))
+    print(f'tpr: {tpr}, fpr:{fpr}')
 
-    return naive_predict
+    return y_predict
+
     
 
 def main():
@@ -119,7 +141,6 @@ def main():
     # y_val[:] = [1 if item >= 6 else -1 for item in y_val]
     y_test[:] = [1 if item >= 6 else -1 for item in y_test]
 
-    # LinReg(X_train, y_train, X_test, y_test)
     print("Logistical Regression:")
     log_predict = LogReg(X_train, y_train, X_test, y_test)
 

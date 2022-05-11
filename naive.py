@@ -2,86 +2,90 @@ import numpy as np
 import pandas as pd
 from matplotlib import pyplot as plt
 from sklearn.metrics import ConfusionMatrixDisplay, RocCurveDisplay, roc_auc_score
-from sklearn.naive_bayes import GaussianNB
 import math
 
 INPUT_FILE = "data/winequality-white.csv"
 
+def bayes_predict(X_train, y_train, X_test):
+    m, n = X_train.shape
+    m_o, _ = X_test.shape
 
-class NaiveBayes:
-    def calc_statistics(self, features, target):
-        self.mean = features.groupby(target).apply(np.mean).to_numpy()
-        self.var = features.groupby(target).apply(np.var).to_numpy()
+    m_pos = np.count_nonzero(y_train == 1.)
+    m_neg = np.count_nonzero(y_train == -1.)
 
-        return self.mean, self.var
+    probs_pos = np.full(m_o, np.log(m_pos / m))
+    probs_neg = np.full(m_o, np.log(m_neg / m))
 
-    def gaussian_density(self, class_idx, x):
-        mean = self.mean[class_idx]
-        var = self.var[class_idx]
-        numerator = np.exp((-1 / 2) * ((x - mean) ** 2) / (2 * var))
-        denominator = np.sqrt(2 * np.pi * var)
-        prob = numerator / denominator
-        return prob
+    sum_pos = np.zeros(m_o)
+    sum_neg = np.zeros(m_o)
 
-    # prior probabilities
-    def calc_prior(self, features, target):
-        self.prior = (
-            features.groupby(target).apply(lambda x: len(x)) / self.rows
-        ).to_numpy()
-        return self.prior
+    x_pos = np.zeros((m_pos, n))
+    x_neg = np.zeros((m_neg, n))
+    idx_pos = 0
+    idx_neg = 0
+    for x, y in zip(X_train, y_train):
+        if y == 1.:
+            x_pos[idx_pos] = x
+            idx_pos += 1
+        else:
+            x_neg[idx_neg] = x
+            idx_neg += 1
+    for i in range(n):
+        # mean and variance
+        mean_ipos = (1/m_pos)*np.sum(x_pos[:,i])
+        var_ipos = (1/(m_pos-1))*np.sum((x_pos[:,i]-mean_ipos)**2)
 
-    # posterior probabilities
-    def calc_posterior(self, x):
-        posteriors = []
-        for i in range(self.count):
-            prior = np.log(self.prior[i])
-            conditional = np.sum(np.log(self.gaussian_density(i, x)))
-            posterior = prior + conditional
-            posteriors.append(posterior)
-        return self.classes[np.argmax(posteriors)]
+        mean_ineg = (1/m_neg)*np.sum(x_neg[:,i])
+        var_ineg = (1/(m_neg-1))*np.sum((x_neg[:,i]-mean_ineg)**2)
 
-    def fit(self, features, target):
-        # define class variables
-        self.classes = np.unique(target)
-        self.count = len(self.classes)
-        self.feature_nums = features.shape[1]
-        self.rows = features.shape[0]
-
-        # calculate statistics
-        self.calc_statistics(features, target)
-        self.calc_prior(features, target)
-
-    def predict(self, features):
-        preds = [self.calc_posterior(f) for f in features.to_numpy()]
-        return preds
+        # gauss probability
+        a_i = X_test[:,i]
+        probs_ipos = (1/(np.sqrt(2*np.pi*var_ipos)))*np.exp(-((a_i-mean_ipos)**2)/(2*var_ipos))
+        probs_ineg = (1/(np.sqrt(2*np.pi*var_ineg)))*np.exp(-((a_i-mean_ineg)**2)/(2*var_ineg))
+        sum_pos += np.log(probs_ipos)   
+        sum_neg += np.log(probs_ineg)
+    
+    probs_tpos = probs_pos + sum_pos
+    probs_tneg = probs_neg + sum_neg
+    out = np.column_stack((probs_tneg, probs_tpos))
+    y_predict = [1. if np.argmax(prob) == 1 else -1. for prob in out]
 
 
-df = pd.read_csv(INPUT_FILE, header=0, sep=";")
+    return y_predict
 
-# pre-processing
-# valb_idx = int(len(df.index)*0.6)
-testb_idx = int(len(df.index) * 0.8)
 
-X_train, y_train = df.iloc[:testb_idx, :-1], df.iloc[:testb_idx, -1]
-# X_val, y_val = df.values[valb_idx:testb_idx, :-1], df.values[valb_idx:testb_idx, -1]
-X_test, y_test = df.iloc[testb_idx:, :-1], df.iloc[testb_idx:, -1]
+def NaiveBayes():
+    df = pd.read_csv(INPUT_FILE, header=0, sep=";")
 
-# modify train/test set for binary classification
-y_train[:] = [1 if item >= 6 else -1 for item in y_train]
-# y_val[:] = [1 if item >= 6 else -1 for item in y_val]
-y_test[:] = [1 if item >= 6 else -1 for item in y_test]
+    # pre-processing
+    # valb_idx = int(len(df.index)*0.6)
+    testb_idx = int(len(df.index) * 0.8)
 
-x = NaiveBayes()
-# print(type(X_train))
-x.fit(X_train, y_train)
-predict = x.predict(X_test)
-# print(preds)
+    X_train, y_train = df.values[:testb_idx, :-1], df.values[:testb_idx, -1]
+    # X_val, y_val = df.values[valb_idx:testb_idx, :-1], df.values[valb_idx:testb_idx, -1]
+    X_test, y_test = df.values[testb_idx:, :-1], df.values[testb_idx:, -1]
 
-ConfusionMatrixDisplay.from_predictions(y_test, predict)
-plt.title("Naive Bayes")
+    # modify train/test set for binary classification
+    y_train[:] = [1 if item >= 6 else -1 for item in y_train]
+    # y_val[:] = [1 if item >= 6 else -1 for item in y_val]
+    y_test[:] = [1 if item >= 6 else -1 for item in y_test]
 
-naive_auc = roc_auc_score(y_test, predict)
-RocCurveDisplay.from_predictions(y_test, predict)
-plt.title("Naive Bayes Classifier ROC")
 
-plt.show()
+    # x.fit(X_train, y_train)
+    y_predict = bayes_predict(X_train, y_train, X_test)
+    # print(preds)
+
+    ConfusionMatrixDisplay.from_predictions(y_test, y_predict)
+    plt.title("Naive Bayes")
+    plt.savefig('bayes_confuse.png')
+
+    naive_auc = roc_auc_score(y_test, y_predict)
+    RocCurveDisplay.from_predictions(y_test, y_predict)
+    plt.title("Naive Bayes Classifier ROC")
+    x = np.arange(0,1.1, 0.1)
+    plt.plot(x, x, '--', color='gray')
+
+    plt.savefig('naive_bayes.png')
+
+if __name__ == "__main__":
+    NaiveBayes()
